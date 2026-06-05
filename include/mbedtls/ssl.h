@@ -1726,6 +1726,9 @@ struct mbedtls_ssl_config {
 #if defined(MBEDTLS_KEY_EXCHANGE_CERT_REQ_ALLOWED_ENABLED)
     const mbedtls_x509_crt *MBEDTLS_PRIVATE(dn_hints);/*!< acceptable client cert issuers    */
 #endif
+#if defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
+    size_t MBEDTLS_PRIVATE(custom_buf_len);
+#endif
 };
 
 struct mbedtls_ssl_context {
@@ -1855,7 +1858,7 @@ struct mbedtls_ssl_context {
     int MBEDTLS_PRIVATE(in_msgtype);             /*!< record header: message type      */
     size_t MBEDTLS_PRIVATE(in_msglen);           /*!< record header: message length    */
     size_t MBEDTLS_PRIVATE(in_left);             /*!< amount of data read so far       */
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t MBEDTLS_PRIVATE(in_buf_len);          /*!< length of input buffer           */
 #endif
 #if defined(MBEDTLS_SSL_PROTO_DTLS)
@@ -1923,7 +1926,7 @@ struct mbedtls_ssl_context {
     int MBEDTLS_PRIVATE(out_msgtype);            /*!< record header: message type      */
     size_t MBEDTLS_PRIVATE(out_msglen);          /*!< record header: message length    */
     size_t MBEDTLS_PRIVATE(out_left);            /*!< amount of data not yet written   */
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t MBEDTLS_PRIVATE(out_buf_len);         /*!< length of output buffer          */
 #endif
 
@@ -3299,6 +3302,9 @@ void mbedtls_ssl_conf_session_cache(mbedtls_ssl_config *conf,
                                     mbedtls_ssl_cache_get_t *f_get_cache,
                                     mbedtls_ssl_cache_set_t *f_set_cache);
 #endif /* MBEDTLS_SSL_SRV_C */
+
+void mbedtls_ssl_conf_directional_buf_size(mbedtls_ssl_config *conf,
+                                           size_t size);
 
 #if defined(MBEDTLS_SSL_CLI_C)
 /**

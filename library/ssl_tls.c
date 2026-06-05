@@ -1377,8 +1377,13 @@ int mbedtls_ssl_setup(mbedtls_ssl_context *ssl,
                       const mbedtls_ssl_config *conf)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
+
     size_t in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
     size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
+    if(conf->custom_buf_len) {
+        in_buf_len = conf->custom_buf_len + MBEDTLS_SSL_HEADER_LEN + MBEDTLS_SSL_PAYLOAD_OVERHEAD;
+        out_buf_len = conf->custom_buf_len + MBEDTLS_SSL_HEADER_LEN + MBEDTLS_SSL_PAYLOAD_OVERHEAD;
+    }
 
     ssl->conf = conf;
 
@@ -1394,7 +1399,7 @@ int mbedtls_ssl_setup(mbedtls_ssl_context *ssl,
     /* Set to NULL in case of an error condition */
     ssl->out_buf = NULL;
 
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     ssl->in_buf_len = in_buf_len;
 #endif
     ssl->in_buf = mbedtls_calloc(1, in_buf_len);
@@ -1404,7 +1409,7 @@ int mbedtls_ssl_setup(mbedtls_ssl_context *ssl,
         goto error;
     }
 
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     ssl->out_buf_len = out_buf_len;
 #endif
     ssl->out_buf = mbedtls_calloc(1, out_buf_len);
@@ -1433,7 +1438,7 @@ error:
 
     ssl->conf = NULL;
 
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     ssl->in_buf_len = 0;
     ssl->out_buf_len = 0;
 #endif
@@ -1465,7 +1470,7 @@ error:
 void mbedtls_ssl_session_reset_msg_layer(mbedtls_ssl_context *ssl,
                                          int partial)
 {
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t in_buf_len = ssl->in_buf_len;
     size_t out_buf_len = ssl->out_buf_len;
 #else
@@ -1731,6 +1736,12 @@ void mbedtls_ssl_conf_session_cache(mbedtls_ssl_config *conf,
     conf->f_set_cache = f_set_cache;
 }
 #endif /* MBEDTLS_SSL_SRV_C */
+
+void mbedtls_ssl_conf_directional_buf_size(mbedtls_ssl_config *conf,
+                                           size_t size)
+{
+    conf->custom_buf_len = size;
+}
 
 #if defined(MBEDTLS_SSL_CLI_C)
 int mbedtls_ssl_set_session(mbedtls_ssl_context *ssl, const mbedtls_ssl_session *session)
@@ -3300,7 +3311,7 @@ size_t mbedtls_ssl_get_current_mtu(const mbedtls_ssl_context *ssl)
 
 int mbedtls_ssl_get_max_out_record_payload(const mbedtls_ssl_context *ssl)
 {
-    size_t max_len = MBEDTLS_SSL_OUT_CONTENT_LEN;
+    size_t max_len = ssl->out_buf_len - MBEDTLS_SSL_HEADER_LEN - MBEDTLS_SSL_PAYLOAD_OVERHEAD;
 
 #if !defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH) && \
     !defined(MBEDTLS_SSL_RECORD_SIZE_LIMIT) && \
@@ -5582,7 +5593,7 @@ void mbedtls_ssl_free(mbedtls_ssl_context *ssl)
     MBEDTLS_SSL_DEBUG_MSG(2, ("=> free"));
 
     if (ssl->out_buf != NULL) {
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
         size_t out_buf_len = ssl->out_buf_len;
 #else
         size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
@@ -5593,7 +5604,7 @@ void mbedtls_ssl_free(mbedtls_ssl_context *ssl)
     }
 
     if (ssl->in_buf != NULL) {
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
         size_t in_buf_len = ssl->in_buf_len;
 #else
         size_t in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
