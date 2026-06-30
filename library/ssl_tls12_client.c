@@ -3248,7 +3248,7 @@ static int ssl_write_certificate_verify(mbedtls_ssl_context *ssl)
     mbedtls_md_type_t md_alg = MBEDTLS_MD_NONE;
     size_t hashlen;
     void *rs_ctx = NULL;
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t out_buf_len = ssl->out_buf_len - (size_t) (ssl->out_msg - ssl->out_buf);
 #else
     size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN - (size_t) (ssl->out_msg - ssl->out_buf);

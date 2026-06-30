@@ -391,7 +391,7 @@ static int ssl_next_record_is_in_datagram(mbedtls_ssl_context *ssl);
 static size_t ssl_get_maximum_datagram_size(mbedtls_ssl_context const *ssl)
 {
     size_t mtu = mbedtls_ssl_get_current_mtu(ssl);
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t out_buf_len = ssl->out_buf_len;
 #else
     size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
@@ -2147,7 +2147,7 @@ int mbedtls_ssl_fetch_input(mbedtls_ssl_context *ssl, size_t nb_want)
 {
     int ret = MBEDTLS_ERR_ERROR_CORRUPTION_DETECTED;
     size_t len;
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t in_buf_len = ssl->in_buf_len;
 #else
     size_t in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
@@ -2946,7 +2946,7 @@ int mbedtls_ssl_write_record(mbedtls_ssl_context *ssl, int force_flush)
     if (!done) {
         unsigned i;
         size_t protected_record_size;
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
         size_t out_buf_len = ssl->out_buf_len;
 #else
         size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
@@ -3349,7 +3349,7 @@ int mbedtls_ssl_prepare_handshake_record(mbedtls_ssl_context *ssl)
          *   after the explicit IV, but here we move it to start where the
          *   IV was.
          */
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
         size_t const in_buf_len = ssl->in_buf_len;
 #else
         size_t const in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
@@ -4840,7 +4840,7 @@ static int ssl_load_buffered_record(mbedtls_ssl_context *ssl)
     unsigned char *rec;
     size_t rec_len;
     unsigned rec_epoch;
-#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH)
+#if defined(MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH) || defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t in_buf_len = ssl->in_buf_len;
 #else
     size_t in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;

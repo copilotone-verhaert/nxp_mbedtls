@@ -1380,10 +1380,13 @@ int mbedtls_ssl_setup(mbedtls_ssl_context *ssl,
 
     size_t in_buf_len = MBEDTLS_SSL_IN_BUFFER_LEN;
     size_t out_buf_len = MBEDTLS_SSL_OUT_BUFFER_LEN;
+#if defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     if(conf->custom_buf_len) {
         in_buf_len = conf->custom_buf_len + MBEDTLS_SSL_HEADER_LEN + MBEDTLS_SSL_PAYLOAD_OVERHEAD;
         out_buf_len = conf->custom_buf_len + MBEDTLS_SSL_HEADER_LEN + MBEDTLS_SSL_PAYLOAD_OVERHEAD;
+        mbedtls_ssl_conf_max_frag_len(conf, MBEDTLS_SSL_MAX_FRAG_LEN_4096);
     }
+#endif
 
     ssl->conf = conf;
 
@@ -1737,11 +1740,13 @@ void mbedtls_ssl_conf_session_cache(mbedtls_ssl_config *conf,
 }
 #endif /* MBEDTLS_SSL_SRV_C */
 
+#if defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
 void mbedtls_ssl_conf_directional_buf_size(mbedtls_ssl_config *conf,
                                            size_t size)
 {
     conf->custom_buf_len = size;
 }
+#endif
 
 #if defined(MBEDTLS_SSL_CLI_C)
 int mbedtls_ssl_set_session(mbedtls_ssl_context *ssl, const mbedtls_ssl_session *session)
@@ -3311,7 +3316,11 @@ size_t mbedtls_ssl_get_current_mtu(const mbedtls_ssl_context *ssl)
 
 int mbedtls_ssl_get_max_out_record_payload(const mbedtls_ssl_context *ssl)
 {
+#if defined(MBEDTLS_SSL_CUSTOM_BUFFER_LENGTH)
     size_t max_len = ssl->out_buf_len - MBEDTLS_SSL_HEADER_LEN - MBEDTLS_SSL_PAYLOAD_OVERHEAD;
+#else
+    size_t max_len = MBEDTLS_SSL_OUT_CONTENT_LEN;
+#endif
 
 #if !defined(MBEDTLS_SSL_MAX_FRAGMENT_LENGTH) && \
     !defined(MBEDTLS_SSL_RECORD_SIZE_LIMIT) && \
